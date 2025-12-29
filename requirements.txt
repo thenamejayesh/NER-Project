@@ -1,6 +1,5 @@
 streamlit
-transformers
-torch
+spacy
 pandas
-
+https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.7.2/en_core_web_trf-3.7.2-py3-none-any.whl
 
