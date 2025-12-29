@@ -1,81 +1,79 @@
+
 import streamlit as st
-from transformers import pipeline
+import spacy
 import pandas as pd
 
-# Page configuration
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="Deep Learning NER App",
     page_icon="🧠",
     layout="centered"
 )
 
-# Load NER model (cached for performance)
+# ---------------- LOAD MODEL ----------------
 @st.cache_resource
-def load_ner_model():
-    return pipeline(
-        "ner",
-        model="dslim/bert-base-NER",
-        aggregation_strategy="simple"
-    )
+def load_model():
+    return spacy.load("en_core_web_trf")  # Transformer-based deep learning model
 
-ner_model = load_ner_model()
+nlp = load_model()
 
-# UI Header
-st.markdown(
-    """
-    <h1 style='text-align:center;color:#4CAF50;'>Deep Learning NER System</h1>
-    <p style='text-align:center;'>Named Entity Recognition using BERT (Transformer Model)</p>
-    """,
-    unsafe_allow_html=True
-)
+# ---------------- UI HEADER ----------------
+st.markdown("""
+<h1 style="text-align:center; color:#4CAF50;">Deep Learning Named Entity Recognition</h1>
+<p style="text-align:center; font-size:18px;">
+Powered by <b>SpaCy Transformer Model (en_core_web_trf)</b>
+</p>
+""", unsafe_allow_html=True)
 
-# Input text
+# ---------------- INPUT ----------------
 text = st.text_area(
     "✍️ Enter your text:",
-    "Virat Kohli was born in Delhi and plays cricket for India."
+    "Virat Kohli was born in Delhi and plays cricket for India.",
+    height=150
 )
 
-# Button
-if st.button("🔍 Extract Entities"):
+# ---------------- BUTTON ----------------
+if st.button("🔍 Analyze Text"):
     if text.strip() == "":
-        st.warning("Please enter some text.")
+        st.warning("Please enter some text to analyze.")
     else:
-        results = ner_model(text)
+        doc = nlp(text)
 
-        if not results:
+        if len(doc.ents) == 0:
             st.info("No named entities found.")
         else:
+            # Create table
             data = []
-            for ent in results:
+            for ent in doc.ents:
                 data.append({
-                    "Entity": ent["word"],
-                    "Label": ent["entity_group"],
-                    "Confidence": round(ent["score"], 3)
+                    "Entity": ent.text,
+                    "Label": ent.label_,
+                    "Meaning": spacy.explain(ent.label_)
                 })
 
             df = pd.DataFrame(data)
 
-            st.success("Entities Extracted Successfully ✅")
+            st.success("Named Entities Detected Successfully ✅")
             st.dataframe(df, use_container_width=True)
 
-            # Highlight Entities
+            # Highlighted output
             st.markdown("### 🖍 Highlighted Entities")
-            highlighted = ""
-            for ent in results:
-                highlighted += f"""
-                <span style="background-color:#ffd54f;
-                             padding:4px;
+            highlighted_text = ""
+            for ent in doc.ents:
+                highlighted_text += f"""
+                <span style="background-color:#ffeaa7;
+                             padding:6px;
+                             margin:4px;
                              border-radius:6px;
-                             margin:3px;
                              display:inline-block;">
-                {ent['word']} ({ent['entity_group']})
+                    {ent.text} <b>({ent.label_})</b>
                 </span>
                 """
-            st.markdown(highlighted, unsafe_allow_html=True)
+            st.markdown(highlighted_text, unsafe_allow_html=True)
 
-# Footer
+# ---------------- FOOTER ----------------
 st.markdown("---")
 st.markdown(
-    "<center>🚀 Built using Transformers & Streamlit | Deep Learning NLP App</center>",
+    "<center>🚀 Built with SpaCy Deep Learning & Streamlit</center>",
     unsafe_allow_html=True
 )
