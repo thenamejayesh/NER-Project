@@ -2,61 +2,47 @@ import streamlit as st
 import spacy
 from spacy import displacy
 
-# Load NLP model
-@st.cache_resource
-def load_model():
-    return spacy.load("en_core_web_sm")
-
-nlp = load_model()
-
-# Page configuration
 st.set_page_config(
-    page_title="Named Entity Recognition (NER)",
+    page_title="NER App",
     page_icon="🧠",
     layout="centered"
 )
 
-# App Title
-st.markdown(
-    """
-    <h1 style='text-align: center; color: #4CAF50;'>🧠 Named Entity Recognition App</h1>
-    <p style='text-align: center;'>Extract entities like Person, Location, Organization from text</p>
-    """,
-    unsafe_allow_html=True
-)
+@st.cache_resource
+def load_nlp():
+    return spacy.load("en_core_web_sm")
 
-# Input text
+# Loading model
+with st.spinner("Loading NLP model... Please wait ⏳"):
+    nlp = load_nlp()
+
+st.title("🧠 Named Entity Recognition App")
+st.markdown("Extract **Person, Location, Organization** and more from text.")
+
 text = st.text_area(
-    "✍️ Enter your sentence below:",
+    "✍️ Enter your text below:",
     "Virat Kohli was born in Delhi and plays cricket for India",
     height=150
 )
 
-# Button
 if st.button("🔍 Analyze Text"):
     if text.strip() == "":
         st.warning("Please enter some text.")
     else:
         doc = nlp(text)
 
-        st.subheader("📌 Extracted Entities")
+        st.subheader("📌 Detected Entities")
 
         if doc.ents:
             for ent in doc.ents:
-                st.success(f"**Entity:** {ent.text}  |  **Label:** {ent.label_} ({spacy.explain(ent.label_)})")
+                st.success(f"Entity: {ent.text} | Label: {ent.label_} ({spacy.explain(ent.label_)})")
         else:
             st.info("No entities found.")
 
-        # Visualization
-        st.subheader("📊 Entity Visualization")
-        html = displacy.render(doc, style="ent", jupyter=False)
+        st.subheader("📊 Visualization")
+        html = displacy.render(doc, style="ent")
         st.markdown(html, unsafe_allow_html=True)
 
-# Footer
-st.markdown(
-    """
-    <hr>
-    <p style='text-align:center;'>🚀 Built using SpaCy & Streamlit</p>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("---")
+st.caption("Built with ❤️ using SpaCy & Streamlit")
+
